@@ -1,0 +1,320 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ── FullCalendar Theme ── */
+.appointment-calendar {
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: transparent;
+  --fc-today-bg-color: oklch(0.97 0.01 250 / 40%);
+  --fc-now-indicator-color: oklch(0.637 0.237 25.331);
+  --fc-event-border-color: transparent;
+}
+
+.dark .appointment-calendar {
+  --fc-today-bg-color: oklch(0.3 0.01 250 / 30%);
+}
+
+.appointment-calendar .fc {
+  font-family: var(--font-sans);
+}
+
+.appointment-calendar .fc-theme-standard td,
+.appointment-calendar .fc-theme-standard th {
+  border-color: var(--border);
+}
+
+.appointment-calendar .fc-theme-standard .fc-scrollgrid {
+  border-color: var(--border);
+  border-width: 0;
+}
+
+.appointment-calendar .fc-col-header-cell {
+  padding: 10px 0;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  background: var(--muted);
+}
+
+.dark .appointment-calendar .fc-col-header-cell {
+  background: oklch(0.22 0 0);
+}
+
+.appointment-calendar .fc-timegrid-slot {
+  height: 2.5rem;
+}
+
+.appointment-calendar .fc-timegrid-slot-label {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  vertical-align: top;
+  padding-top: 2px;
+}
+
+.appointment-calendar .fc-timegrid-now-indicator-line {
+  border-color: #4285f4 !important;
+  border-width: 2px !important;
+  z-index: 4 !important;
+}
+
+.appointment-calendar .fc-timegrid-now-indicator-line::before {
+  content: "" !important;
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  background: #4285f4;
+  border-radius: 50%;
+}
+
+.appointment-calendar .fc-timegrid-now-indicator-arrow {
+  display: none !important;
+}
+
+.appointment-calendar .fc-event {
+  border-radius: 6px;
+  border-left-width: 3px;
+  font-size: 0.75rem;
+  cursor: default;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.appointment-calendar .fc-available-slot {
+  cursor: pointer !important;
+}
+
+.appointment-calendar .fc-available-slot:hover {
+  opacity: 0.85;
+  transform: scale(1.01);
+}
+
+.appointment-calendar .fc-selected-slot {
+  cursor: pointer !important;
+  box-shadow: 0 0 0 2px oklch(0.541 0.281 293.009), 0 2px 8px rgb(124 58 237 / 25%);
+}
+
+.appointment-calendar .fc-daygrid-event {
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 0.7rem;
+}
+
+.appointment-calendar .fc-daygrid-day-number {
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  color: var(--foreground);
+}
+
+.appointment-calendar .fc-day-today .fc-daygrid-day-number {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 999px;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+}
+
+.appointment-calendar .fc-scrollgrid-section > * {
+  border-color: var(--border);
+}
+
+.appointment-calendar .fc-timegrid-divider {
+  display: none;
+}
+
+/* ── Past blocked areas: diagonal 45° stripes via ::after pseudo-elements ── */
+
+/* Stripe overlay mixin — absolute fill + pointer-events none so events stay clickable */
+.appointment-calendar .fc-timegrid-col.fc-day-past .fc-timegrid-col-frame,
+.appointment-calendar .fc-daygrid-day.fc-day-past {
+  position: relative;
+}
+
+.appointment-calendar .fc-timegrid-col.fc-day-past .fc-timegrid-col-frame::after,
+.appointment-calendar .fc-daygrid-day.fc-day-past::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.06),
+    rgba(0, 0, 0, 0.06) 5px,
+    rgba(0, 0, 0, 0.02) 5px,
+    rgba(0, 0, 0, 0.02) 10px
+  );
+}
+.dark .appointment-calendar .fc-timegrid-col.fc-day-past .fc-timegrid-col-frame::after,
+.dark .appointment-calendar .fc-daygrid-day.fc-day-past::after {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.08) 5px,
+    rgba(255, 255, 255, 0.02) 5px,
+    rgba(255, 255, 255, 0.02) 10px
+  );
+}
+
+/* Background event for today's past hours */
+.appointment-calendar .fc-bg-event.fc-past-hours {
+  position: relative;
+  opacity: 1 !important;
+  background: transparent !important;
+}
+.appointment-calendar .fc-bg-event.fc-past-hours::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.06),
+    rgba(0, 0, 0, 0.06) 5px,
+    rgba(0, 0, 0, 0.02) 5px,
+    rgba(0, 0, 0, 0.02) 10px
+  );
+}
+.dark .appointment-calendar .fc-bg-event.fc-past-hours::after {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.08) 5px,
+    rgba(255, 255, 255, 0.02) 5px,
+    rgba(255, 255, 255, 0.02) 10px
+  );
+}
