@@ -35,12 +35,14 @@ import { PhoneInput, parsePhoneToE164, splitPhoneFromE164 } from "@/components/p
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Patient } from "@/types";
 
 export default function PatientsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = usePageSize("patients");
   const [sort, setSort] = useState<SortState>({ sortBy: null, sortOrder: null });
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
 
   const { data: patientsData, isLoading } = usePatients({
     page, pageSize,
@@ -326,8 +328,8 @@ export default function PatientsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => deletePatient.mutate(p.id)}
-                          disabled={deletePatient.isPending}
+                          onClick={() => setDeleteTarget(p)}
+                          className="cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -347,6 +349,26 @@ export default function PatientsPage() {
           />
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Eliminar paciente"
+        description={
+          deleteTarget
+            ? `¿Estás seguro de que querés eliminar a ${deleteTarget.firstName} ${deleteTarget.lastName}? Esta acción es irreversible y eliminará todos los turnos, historia clínica y datos asociados al paciente.`
+            : ""
+        }
+        confirmLabel="Sí, eliminar"
+        variant="destructive"
+        loading={deletePatient.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deletePatient.mutate(deleteTarget.id, {
+            onSettled: () => setDeleteTarget(null),
+          });
+        }}
+      />
     </div>
   );
 }
