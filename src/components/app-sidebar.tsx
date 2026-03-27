@@ -8,6 +8,7 @@ import {
   Building2,
   CalendarCheck,
   CalendarPlus,
+  ClipboardList,
   LayoutDashboard,
   Stethoscope,
   Tag,
@@ -57,6 +58,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { title: "Turnos", href: "/dashboard/appointments", icon: CalendarCheck, access: "operator" },
       { title: "Nuevo Turno", href: "/dashboard/appointments/new", icon: CalendarPlus, access: "operator" },
       { title: "Notificaciones", href: "/dashboard/notifications", icon: Bell, access: "operator" },
+      { title: "Historia Clínica", href: "/dashboard/medical-records", icon: ClipboardList, access: "operator" },
     ],
   },
   {

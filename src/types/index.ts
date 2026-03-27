@@ -210,7 +210,10 @@ export interface Patient {
   updatedAt: string;
   _count?: {
     appointments: number;
+    medicalRecords?: number;
   };
+  appointments?: PatientAppointmentSummary[];
+  medicalRecords?: MedicalRecord[];
 }
 
 export interface CreatePatientInput {
@@ -330,6 +333,79 @@ export interface InternalNotification {
   clinicId: number | null;
   clinic?: Clinic | null;
   createdAt: string;
+}
+
+// ── Medical Records ──
+export type MedicalRecordEntryType =
+  | "manual"
+  | "auto_created"
+  | "auto_confirmed"
+  | "auto_cancelled"
+  | "auto_completed"
+  | "auto_no_show";
+
+export interface MedicalRecord {
+  id: number;
+  patientId: number;
+  appointmentId: number | null;
+  entryType: MedicalRecordEntryType;
+  date: string;
+  reason: string | null;
+  diagnosis: string | null;
+  treatment: string | null;
+  prescriptions: string | null;
+  studies: string | null;
+  observations: string | null;
+  weight: number | null;
+  height: number | null;
+  bloodPressure: string | null;
+  temperature: number | null;
+  heartRate: number | null;
+  createdBy: number | null;
+  createdAt: string;
+  updatedAt: string;
+  appointment?: {
+    id: number;
+    date: string;
+    startTime: string | null;
+    status: AppointmentStatus;
+    doctor?: { id: number; firstName: string; lastName: string };
+    clinic?: { id: number; name: string };
+    specialty?: { id: number; name: string };
+  } | null;
+  patient?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    dni: string;
+  };
+}
+
+export interface CreateMedicalRecordInput {
+  date: string;
+  reason?: string;
+  diagnosis?: string;
+  treatment?: string;
+  prescriptions?: string;
+  studies?: string;
+  observations?: string;
+  weight?: number;
+  height?: number;
+  bloodPressure?: string;
+  temperature?: number;
+  heartRate?: number;
+}
+
+export type UpdateMedicalRecordInput = Partial<CreateMedicalRecordInput>;
+
+export interface PatientAppointmentSummary {
+  id: number;
+  date: string;
+  startTime: string | null;
+  status: AppointmentStatus;
+  doctor: { id: number; firstName: string; lastName: string };
+  clinic: { id: number; name: string };
+  specialty: { id: number; name: string };
 }
 
 // ── Pagination ──

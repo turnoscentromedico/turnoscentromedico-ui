@@ -38,6 +38,7 @@ import { SetupBanner } from "@/components/setup-banner";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { usePageSize } from "@/hooks/use-page-size";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { PatientLink } from "@/components/patient-link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -303,7 +304,7 @@ export default function DashboardPage() {
                 >
                   <div className="space-y-1">
                     <p className="text-sm font-medium">
-                      {apt.patient.firstName} {apt.patient.lastName}
+                      <PatientLink patientId={apt.patient.id} firstName={apt.patient.firstName} lastName={apt.patient.lastName} />
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Dr. {apt.doctor.lastName}, {apt.doctor.firstName} —{" "}
@@ -366,7 +367,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-muted-foreground">Paciente</p>
                   <p className="font-medium">
-                    {detail.patient.firstName} {detail.patient.lastName}
+                    <PatientLink patientId={detail.patient.id} firstName={detail.patient.firstName} lastName={detail.patient.lastName} />
                   </p>
                 </div>
                 <div>
