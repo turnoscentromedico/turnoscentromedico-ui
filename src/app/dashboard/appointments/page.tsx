@@ -72,6 +72,7 @@ import { useCalendarSettings } from "@/hooks/use-settings";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { PatientLink } from "@/components/patient-link";
 import type { Appointment, AvailableSlot } from "@/types";
 
 const statusLabels: Record<string, string> = {
@@ -348,7 +349,7 @@ export default function AppointmentsPage() {
                 <div>
                   <p className="text-muted-foreground">Paciente</p>
                   <p className="font-medium">
-                    {detail.patient.firstName} {detail.patient.lastName}
+                    <PatientLink patientId={detail.patient.id} firstName={detail.patient.firstName} lastName={detail.patient.lastName} />
                   </p>
                 </div>
                 <div>
@@ -482,7 +483,7 @@ export default function AppointmentsPage() {
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">
-                          {a.patient.firstName} {a.patient.lastName}
+                          <PatientLink patientId={a.patient.id} firstName={a.patient.firstName} lastName={a.patient.lastName} />
                         </span>
                       </div>
                       <Badge variant="outline" className={cn("text-xs", statusColors[a.status])}>
@@ -657,7 +658,7 @@ function ListViewCard({
                       : "—"}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {a.patient.firstName} {a.patient.lastName}
+                    <PatientLink patientId={a.patient.id} firstName={a.patient.firstName} lastName={a.patient.lastName} />
                   </TableCell>
                   <TableCell>{a.doctor.lastName}, {a.doctor.firstName}</TableCell>
                   <TableCell>{a.clinic.name}</TableCell>
@@ -1047,6 +1048,7 @@ function CalendarView({
                         <span className="text-[11px] font-semibold truncate">
                           {first.patient.firstName} {first.patient.lastName}
                         </span>
+
                       </div>
                       <span className="text-[10px] opacity-80 truncate block">
                         {arg.timeText} · Dr. {first.doctor.lastName}

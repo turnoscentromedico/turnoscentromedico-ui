@@ -31,6 +31,9 @@ import type {
   UpdateUserInput,
   AppSettings,
   InternalNotification,
+  MedicalRecord,
+  CreateMedicalRecordInput,
+  UpdateMedicalRecordInput,
 } from "@/types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -442,6 +445,37 @@ class ApiClient {
       method: "PUT",
       body: JSON.stringify(data),
     });
+  }
+
+  // ── Medical Records ──
+  getMedicalRecords(patientId: number, params?: PaginationParams & { entryType?: string }) {
+    const sp = new URLSearchParams();
+    if (params?.entryType) sp.set("entryType", params.entryType);
+    return this.requestPaginated<MedicalRecord>(
+      `/api/patients/${patientId}/medical-records${this.buildPaginatedQs(sp, params)}`,
+    );
+  }
+
+  getMedicalRecord(id: number) {
+    return this.request<MedicalRecord>(`/api/medical-records/${id}`);
+  }
+
+  createMedicalRecord(patientId: number, data: CreateMedicalRecordInput) {
+    return this.request<MedicalRecord>(`/api/patients/${patientId}/medical-records`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  updateMedicalRecord(id: number, data: UpdateMedicalRecordInput) {
+    return this.request<MedicalRecord>(`/api/medical-records/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  deleteMedicalRecord(id: number) {
+    return this.request<void>(`/api/medical-records/${id}`, { method: "DELETE" });
   }
 
   // ── Health ──

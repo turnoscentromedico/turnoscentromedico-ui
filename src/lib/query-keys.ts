@@ -69,4 +69,9 @@ export const queryKeys = {
     all: (params?: QP) => ["notifications", params ?? {}] as const,
     unreadCount: ["notifications", "unread-count"] as const,
   },
+  medicalRecords: {
+    byPatient: (patientId: number, params?: QP & { entryType?: string }) =>
+      ["medical-records", "patient", patientId, params ?? {}] as const,
+    detail: (id: number) => ["medical-records", id] as const,
+  },
 } as const;
