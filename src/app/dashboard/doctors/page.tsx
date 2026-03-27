@@ -46,6 +46,8 @@ import { useSpecialties } from "@/hooks/use-specialties";
 import { doctorSchema, type DoctorFormData } from "@/lib/schemas";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import type { Doctor } from "@/types";
 
 const EMPTY_FORM: DoctorFormData = {
   firstName: "",
@@ -86,6 +88,7 @@ export default function DoctorsPage() {
   const deleteDoctor = useDeleteDoctor();
 
   const [open, setOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Doctor | null>(null);
 
   const form = useForm<DoctorFormData>({
     resolver: zodResolver(doctorSchema),
@@ -373,8 +376,8 @@ export default function DoctorsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={() => deleteDoctor.mutate(d.id)}
-                          disabled={deleteDoctor.isPending}
+                          onClick={() => setDeleteTarget(d)}
+                          className="cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -395,6 +398,26 @@ export default function DoctorsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Eliminar doctor"
+        description={
+          deleteTarget
+            ? `¿Estás seguro de que querés eliminar a ${deleteTarget.firstName} ${deleteTarget.lastName}? Esta acción es irreversible y eliminará su agenda, turnos activos (se notificará la cancelación a los pacientes) y todos los datos asociados.`
+            : ""
+        }
+        confirmLabel="Sí, eliminar"
+        variant="destructive"
+        loading={deleteDoctor.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteDoctor.mutate(deleteTarget.id, {
+            onSettled: () => setDeleteTarget(null),
+          });
+        }}
+      />
     </div>
   );
 }
