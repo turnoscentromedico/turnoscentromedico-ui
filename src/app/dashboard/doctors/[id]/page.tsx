@@ -3,6 +3,7 @@
 import { use, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { ViewGuard } from "@/components/view-guard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -266,18 +267,21 @@ export default function DoctorDetailPage({
 
   if (doctorLoading || schedulesLoading) {
     return (
+      <ViewGuard viewId="doctors">
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-[400px] w-full" />
       </div>
+      </ViewGuard>
     );
   }
 
   if (!doctor) {
-    return <p className="text-muted-foreground">Doctor no encontrado</p>;
+    return <ViewGuard viewId="doctors"><p className="text-muted-foreground">Doctor no encontrado</p></ViewGuard>;
   }
 
   return (
+    <ViewGuard viewId="doctors">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -686,5 +690,6 @@ export default function DoctorDetailPage({
         </DialogContent>
       </Dialog>
     </div>
+    </ViewGuard>
   );
 }

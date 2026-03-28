@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   Stethoscope,
   Tag,
-  User,
   Users,
   UsersRound,
   Settings,
@@ -33,68 +32,64 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useMe } from "@/hooks/use-role";
 import { useUnreadNotificationCount } from "@/hooks/use-notifications";
-
-type NavAccess = "all" | "operator" | "admin";
+import { useViewPermissions, type ViewId } from "@/hooks/use-view-permissions";
 
 interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  access: NavAccess;
+  viewId: ViewId;
 }
 
 const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "General",
     items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, access: "operator" },
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, viewId: "dashboard" },
     ],
   },
   {
     label: "Turnos",
     items: [
-      { title: "Turnos", href: "/dashboard/appointments", icon: CalendarCheck, access: "operator" },
-      { title: "Nuevo Turno", href: "/dashboard/appointments/new", icon: CalendarPlus, access: "operator" },
-      { title: "Notificaciones", href: "/dashboard/notifications", icon: Bell, access: "operator" },
-      { title: "Historia Clínica", href: "/dashboard/medical-records", icon: ClipboardList, access: "operator" },
+      { title: "Turnos", href: "/dashboard/appointments", icon: CalendarCheck, viewId: "appointments" },
+      { title: "Nuevo Turno", href: "/dashboard/appointments/new", icon: CalendarPlus, viewId: "appointments.new" },
+      { title: "Notificaciones", href: "/dashboard/notifications", icon: Bell, viewId: "notifications" },
+      { title: "Historia Clínica", href: "/dashboard/medical-records", icon: ClipboardList, viewId: "medical-records" },
     ],
   },
   {
     label: "Administración",
     items: [
-      { title: "Clínicas", href: "/dashboard/clinics", icon: Building2, access: "admin" },
-      { title: "Especialidades", href: "/dashboard/specialties", icon: Tag, access: "operator" },
-      { title: "Doctores", href: "/dashboard/doctors", icon: Stethoscope, access: "operator" },
-      { title: "Pacientes", href: "/dashboard/patients", icon: UsersRound, access: "operator" },
-      { title: "Usuarios", href: "/dashboard/users", icon: Users, access: "admin" },
-      { title: "Configuración", href: "/dashboard/settings", icon: Settings, access: "operator" },
+      { title: "Clínicas", href: "/dashboard/clinics", icon: Building2, viewId: "clinics" },
+      { title: "Especialidades", href: "/dashboard/specialties", icon: Tag, viewId: "specialties" },
+      { title: "Doctores", href: "/dashboard/doctors", icon: Stethoscope, viewId: "doctors" },
+      { title: "Pacientes", href: "/dashboard/patients", icon: UsersRound, viewId: "patients" },
+      { title: "Usuarios", href: "/dashboard/users", icon: Users, viewId: "users" },
+      { title: "Configuración", href: "/dashboard/settings", icon: Settings, viewId: "settings" },
     ],
   },
 ];
-
-function canAccess(access: NavAccess, role: string | null): boolean {
-  if (access === "all") return true;
-  if (access === "operator") return role === "ADMIN" || role === "OPERATOR";
-  if (access === "admin") return role === "ADMIN";
-  return false;
-}
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Admin",
+  OPERATOR: "Operador",
+  DOCTOR: "Médico",
+  STANDARD: "Sin permisos",
+};
+
 export function AppSidebar() {
   const pathname = usePathname();
-  const { data: me, isLoading } = useMe();
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
+  const { canAccess, isLoading, role } = useViewPermissions();
 
-  const role = me?.role ?? null;
-  const roleLabel =
-    role === "ADMIN" ? "Admin" : role === "OPERATOR" ? "Operador" : "Sin permisos";
+  const roleLabel = role ? ROLE_LABELS[role] ?? role : "";
 
   return (
     <Sidebar>
@@ -116,8 +111,8 @@ export function AppSidebar() {
           </div>
         ) : (
           navGroups.map((group, gi) => {
-            const visibleItems = group.items.filter(
-              (item) => canAccess(item.access, role)
+            const visibleItems = group.items.filter((item) =>
+              canAccess(item.viewId),
             );
             if (visibleItems.length === 0) return null;
             return (
@@ -135,7 +130,7 @@ export function AppSidebar() {
                           >
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                            {item.title === "Notificaciones" && unreadCount > 0 && (
+                            {item.viewId === "notifications" && unreadCount > 0 && (
                               <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-[10px] justify-center">
                                 {unreadCount > 99 ? "99+" : unreadCount}
                               </Badge>
@@ -158,7 +153,15 @@ export function AppSidebar() {
           <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
             {role && (
               <Badge
-                variant={role === "ADMIN" ? "default" : role === "OPERATOR" ? "secondary" : "outline"}
+                variant={
+                  role === "ADMIN"
+                    ? "default"
+                    : role === "OPERATOR"
+                      ? "secondary"
+                      : role === "DOCTOR"
+                        ? "secondary"
+                        : "outline"
+                }
                 className="w-fit text-[10px]"
               >
                 {roleLabel}

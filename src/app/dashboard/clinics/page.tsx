@@ -35,6 +35,7 @@ import { clinicSchema, type ClinicFormData } from "@/lib/schemas";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
 import type { Clinic } from "@/types";
+import { ViewGuard } from "@/components/view-guard";
 
 export default function ClinicsPage() {
   const [page, setPage] = useState(1);
@@ -88,6 +89,7 @@ export default function ClinicsPage() {
   }
 
   return (
+    <ViewGuard viewId="clinics">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -223,5 +225,6 @@ export default function ClinicsPage() {
         </CardContent>
       </Card>
     </div>
+    </ViewGuard>
   );
 }

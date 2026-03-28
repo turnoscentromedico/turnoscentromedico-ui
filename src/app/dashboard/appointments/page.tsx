@@ -73,6 +73,7 @@ import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PatientLink } from "@/components/patient-link";
+import { ViewGuard } from "@/components/view-guard";
 import type { Appointment, AvailableSlot } from "@/types";
 
 const statusLabels: Record<string, string> = {
@@ -201,6 +202,7 @@ export default function AppointmentsPage() {
   }, [appointments, search]);
 
   return (
+    <ViewGuard viewId="appointments">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -576,6 +578,7 @@ export default function AppointmentsPage() {
         onConfirm={executePendingAction}
       />
     </div>
+    </ViewGuard>
   );
 }
 

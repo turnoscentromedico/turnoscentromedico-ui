@@ -58,7 +58,7 @@ export const userSchema = z.object({
   clerkUserId: z.string().min(1, "El Clerk User ID es requerido"),
   name: z.string().min(1, "El nombre es requerido"),
   email: z.string().email("Email inválido"),
-  role: z.enum(["ADMIN", "OPERATOR", "STANDARD"]),
+  role: z.enum(["ADMIN", "OPERATOR", "DOCTOR", "STANDARD"]),
   clinicIds: z.array(z.number()).optional(),
 });
 

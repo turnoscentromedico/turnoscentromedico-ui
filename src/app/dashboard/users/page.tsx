@@ -50,32 +50,37 @@ import {
   useDeleteUser,
 } from "@/hooks/use-users";
 import { useClinics } from "@/hooks/use-clinics";
+import { useDoctors } from "@/hooks/use-doctors";
 import { useMe } from "@/hooks/use-role";
 import { userSchema, type UserFormData } from "@/lib/schemas";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
+import { Stethoscope } from "lucide-react";
 import type { SystemUser } from "@/types";
+import { ViewGuard } from "@/components/view-guard";
 
 export default function UsersPage() {
   const { data: me, isLoading: meLoading } = useMe();
 
-  if (meLoading) return <Skeleton className="h-64 w-full" />;
-
-  if (me?.role !== "ADMIN") {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="rounded-full bg-muted p-4 mb-4">
-          <ShieldAlert className="h-10 w-10 text-muted-foreground" />
+  return (
+    <ViewGuard viewId="users">
+      {meLoading ? (
+        <Skeleton className="h-64 w-full" />
+      ) : me?.role !== "ADMIN" ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <ShieldAlert className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Acceso restringido</h2>
+          <p className="text-muted-foreground">
+            Solo los administradores pueden gestionar usuarios.
+          </p>
         </div>
-        <h2 className="text-2xl font-bold mb-2">Acceso restringido</h2>
-        <p className="text-muted-foreground">
-          Solo los administradores pueden gestionar usuarios.
-        </p>
-      </div>
-    );
-  }
-
-  return <UsersPageContent />;
+      ) : (
+        <UsersPageContent />
+      )}
+    </ViewGuard>
+  );
 }
 
 function UsersPageContent() {
@@ -93,9 +98,13 @@ function UsersPageContent() {
   const totalUsers = usersData?.total ?? 0;
   const { data: clinicsData } = useClinics({ pageSize: 100 });
   const clinics = clinicsData?.data ?? [];
+  const { data: doctorsData } = useDoctors({ pageSize: 100 });
+  const doctors = doctorsData?.data ?? [];
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
+
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -117,6 +126,7 @@ function UsersPageContent() {
       role: "OPERATOR",
       clinicIds: [],
     });
+    setSelectedDoctorId(null);
     setOpen(true);
   }
 
@@ -129,10 +139,12 @@ function UsersPageContent() {
       role: u.role,
       clinicIds: u.clinics?.map((c) => c.id) ?? [],
     });
+    setSelectedDoctorId(u.doctorId ?? null);
     setOpen(true);
   }
 
   async function onSubmit(data: UserFormData) {
+    const doctorId = data.role === "DOCTOR" ? selectedDoctorId : null;
     if (editing) {
       await updateUser.mutateAsync({
         id: editing.id,
@@ -141,13 +153,15 @@ function UsersPageContent() {
           email: data.email,
           role: data.role,
           clinicIds: data.clinicIds ?? [],
+          doctorId,
         },
       });
     } else {
-      await createUser.mutateAsync(data);
+      await createUser.mutateAsync({ ...data, doctorId });
     }
     setOpen(false);
     form.reset();
+    setSelectedDoctorId(null);
   }
 
   const watchedClinicIds = form.watch("clinicIds") ?? [];
@@ -218,12 +232,13 @@ function UsersPageContent() {
                 <Label>Rol *</Label>
                 <Select
                   value={form.watch("role")}
-                  onValueChange={(val) =>
+                  onValueChange={(val) => {
                     form.setValue(
                       "role",
-                      (val ?? "OPERATOR") as "ADMIN" | "OPERATOR" | "STANDARD",
-                    )
-                  }
+                      (val ?? "OPERATOR") as "ADMIN" | "OPERATOR" | "DOCTOR" | "STANDARD",
+                    );
+                    if (val !== "DOCTOR") setSelectedDoctorId(null);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -231,10 +246,49 @@ function UsersPageContent() {
                   <SelectContent>
                     <SelectItem value="ADMIN">Admin</SelectItem>
                     <SelectItem value="OPERATOR">Operador</SelectItem>
+                    <SelectItem value="DOCTOR">Médico</SelectItem>
                     <SelectItem value="STANDARD">Sin permisos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {form.watch("role") === "DOCTOR" && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4" />
+                    Doctor vinculado *
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Seleccioná el doctor que corresponde a este usuario
+                  </p>
+                  <Select
+                    value={selectedDoctorId ? String(selectedDoctorId) : ""}
+                    onValueChange={(val) => setSelectedDoctorId(val ? Number(val) : null)}
+                  >
+                    <SelectTrigger>
+                      {selectedDoctorId
+                        ? (() => {
+                            const d = doctors.find((doc) => doc.id === selectedDoctorId);
+                            return d ? `${d.lastName}, ${d.firstName}` : "Seleccionar doctor";
+                          })()
+                        : <SelectValue placeholder="Seleccionar doctor" />}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors
+                        .filter((d) => {
+                          const linkedUsers = users.filter(
+                            (u) => u.doctorId === d.id && u.id !== editing?.id,
+                          );
+                          return linkedUsers.length === 0;
+                        })
+                        .map((d) => (
+                          <SelectItem key={d.id} value={String(d.id)}>
+                            {d.lastName}, {d.firstName} — {d.specialty?.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
@@ -334,27 +388,36 @@ function UsersPageContent() {
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            u.role === "ADMIN"
-                              ? "default"
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant={
+                              u.role === "ADMIN"
+                                ? "default"
+                                : u.role === "OPERATOR" || u.role === "DOCTOR"
+                                  ? "secondary"
+                                  : "outline"
+                            }
+                            className="gap-1 w-fit"
+                          >
+                            {u.role === "ADMIN" ? (
+                              <ShieldCheck className="h-3 w-3" />
+                            ) : (
+                              <Shield className="h-3 w-3" />
+                            )}
+                            {u.role === "ADMIN"
+                              ? "Admin"
                               : u.role === "OPERATOR"
-                                ? "secondary"
-                                : "outline"
-                          }
-                          className="gap-1"
-                        >
-                          {u.role === "ADMIN" ? (
-                            <ShieldCheck className="h-3 w-3" />
-                          ) : (
-                            <Shield className="h-3 w-3" />
+                                ? "Operador"
+                                : u.role === "DOCTOR"
+                                  ? "Médico"
+                                  : "Sin permisos"}
+                          </Badge>
+                          {u.role === "DOCTOR" && u.doctor && (
+                            <span className="text-xs text-muted-foreground">
+                              Dr. {u.doctor.firstName} {u.doctor.lastName}
+                            </span>
                           )}
-                          {u.role === "ADMIN"
-                            ? "Admin"
-                            : u.role === "OPERATOR"
-                              ? "Operador"
-                              : "Sin permisos"}
-                        </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {u.clinics?.length ? (

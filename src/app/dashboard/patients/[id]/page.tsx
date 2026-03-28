@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { ViewGuard } from "@/components/view-guard";
 import { format, parseISO, differenceInYears } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -134,22 +135,27 @@ export default function PatientProfilePage() {
 
   if (isLoading) {
     return (
+      <ViewGuard viewId="patients">
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-60 w-full" />
       </div>
+      </ViewGuard>
     );
   }
 
   if (!patient) {
     return (
+      <ViewGuard viewId="patients">
       <div className="text-center py-12 text-muted-foreground">
         Paciente no encontrado
       </div>
+      </ViewGuard>
     );
   }
 
   return (
+    <ViewGuard viewId="patients">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -565,6 +571,7 @@ export default function PatientProfilePage() {
         onConfirm={handleDeleteConfirm}
       />
     </div>
+    </ViewGuard>
   );
 }
 

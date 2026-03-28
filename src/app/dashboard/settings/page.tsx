@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Settings, Clock, Save, Mail, MessageCircle } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Settings, Clock, Save, Mail, MessageCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useMe } from "@/hooks/use-role";
+import { ALL_VIEWS, VIEW_LABELS, type ViewId } from "@/hooks/use-view-permissions";
+import { ViewGuard } from "@/components/view-guard";
 
 const HOURS = Array.from({ length: 25 }, (_, i) => {
   const h = String(i).padStart(2, "0");
@@ -36,6 +39,12 @@ export default function SettingsPage() {
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
   const [dirty, setDirty] = useState(false);
 
+  const CONFIGURABLE_ROLES = ["OPERATOR", "DOCTOR"] as const;
+  const ROLE_LABELS_MAP: Record<string, string> = { OPERATOR: "Operador", DOCTOR: "Médico" };
+
+  const [viewPerms, setViewPerms] = useState<Record<string, Record<string, boolean>>>({});
+  const [viewsDirty, setViewsDirty] = useState(false);
+
   useEffect(() => {
     if (settings) {
       setMinTime(settings["calendar.slotMinTime"] ?? "06:00");
@@ -44,22 +53,51 @@ export default function SettingsPage() {
       setEmailEnabled(settings["notifications.emailEnabled"] !== "false");
       setWhatsappEnabled(settings["notifications.whatsappEnabled"] !== "false");
       setDirty(false);
+
+      const perms: Record<string, Record<string, boolean>> = {};
+      for (const role of CONFIGURABLE_ROLES) {
+        const raw = settings[`views.${role}`];
+        if (raw) {
+          try { perms[role] = JSON.parse(raw); } catch { perms[role] = {}; }
+        } else {
+          perms[role] = {};
+        }
+      }
+      setViewPerms(perms);
+      setViewsDirty(false);
     }
   }, [settings]);
 
+  const toggleViewPerm = useCallback((role: string, viewId: string, checked: boolean) => {
+    setViewPerms((prev) => ({
+      ...prev,
+      [role]: { ...prev[role], [viewId]: checked },
+    }));
+    setViewsDirty(true);
+  }, []);
+
   function handleSave() {
-    updateSettings.mutate({
+    const payload: Record<string, string> = {
       "calendar.slotMinTime": minTime,
       "calendar.slotMaxTime": maxTime,
       "calendar.show24h": String(show24h),
       "notifications.emailEnabled": String(emailEnabled),
       "notifications.whatsappEnabled": String(whatsappEnabled),
-    }, {
-      onSuccess: () => setDirty(false),
+    };
+    for (const role of CONFIGURABLE_ROLES) {
+      if (viewPerms[role]) {
+        payload[`views.${role}`] = JSON.stringify(viewPerms[role]);
+      }
+    }
+    updateSettings.mutate(payload, {
+      onSuccess: () => { setDirty(false); setViewsDirty(false); },
     });
   }
 
+  const anyDirty = dirty || viewsDirty;
+
   return (
+    <ViewGuard viewId="settings">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -160,7 +198,7 @@ export default function SettingsPage() {
               {isAdmin && (
                 <Button
                   onClick={handleSave}
-                  disabled={!dirty || updateSettings.isPending}
+                  disabled={!anyDirty || updateSettings.isPending}
                   className="gap-2"
                 >
                   <Save className="h-4 w-4" />
@@ -243,7 +281,7 @@ export default function SettingsPage() {
               {isAdmin && (
                 <Button
                   onClick={handleSave}
-                  disabled={!dirty || updateSettings.isPending}
+                  disabled={!anyDirty || updateSettings.isPending}
                   className="gap-2"
                 >
                   <Save className="h-4 w-4" />
@@ -254,6 +292,64 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {!isLoading && isAdmin && (
+        <Card className="max-w-3xl">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Vistas por roles
+            </CardTitle>
+            <CardDescription>
+              Configurá qué secciones puede ver cada rol. El administrador siempre tiene acceso a todo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 pr-4 font-medium">Vista</th>
+                    {CONFIGURABLE_ROLES.map((role) => (
+                      <th key={role} className="text-center py-2 px-4 font-medium">
+                        {ROLE_LABELS_MAP[role]}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {ALL_VIEWS.map((viewId) => (
+                    <tr key={viewId} className="border-b last:border-0">
+                      <td className="py-3 pr-4">{VIEW_LABELS[viewId]}</td>
+                      {CONFIGURABLE_ROLES.map((role) => (
+                        <td key={role} className="text-center py-3 px-4">
+                          <Checkbox
+                            checked={viewPerms[role]?.[viewId] ?? false}
+                            onCheckedChange={(checked) =>
+                              toggleViewPerm(role, viewId, !!checked)
+                            }
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-4">
+              <Button
+                onClick={handleSave}
+                disabled={!anyDirty || updateSettings.isPending}
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {updateSettings.isPending ? "Guardando..." : "Guardar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
+    </ViewGuard>
   );
 }
