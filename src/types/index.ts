@@ -1,5 +1,5 @@
 // ── Roles ──
-export type UserRole = "ADMIN" | "OPERATOR" | "STANDARD";
+export type UserRole = "ADMIN" | "OPERATOR" | "DOCTOR" | "STANDARD";
 
 // ── Auth ──
 export interface MeResponse {
@@ -7,6 +7,7 @@ export interface MeResponse {
   systemUserId: number;
   role: UserRole;
   clinicIds: number[];
+  doctorId: number | null;
 }
 
 export interface SetupStatus {
@@ -294,6 +295,8 @@ export interface SystemUser {
   email: string;
   role: UserRole;
   clinics: Clinic[];
+  doctorId: number | null;
+  doctor: { id: number; firstName: string; lastName: string } | null;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -305,6 +308,7 @@ export interface CreateUserInput {
   email: string;
   role: UserRole;
   clinicIds?: number[];
+  doctorId?: number | null;
 }
 
 export interface UpdateUserInput {
@@ -312,6 +316,7 @@ export interface UpdateUserInput {
   email?: string;
   role?: UserRole;
   clinicIds?: number[];
+  doctorId?: number | null;
 }
 
 // ── Settings ──

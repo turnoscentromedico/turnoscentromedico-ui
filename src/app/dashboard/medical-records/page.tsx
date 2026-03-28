@@ -6,6 +6,7 @@ import { Search, ClipboardList, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ViewGuard } from "@/components/view-guard";
 import { usePatients } from "@/hooks/use-patients";
 
 export default function MedicalRecordsPage() {
@@ -27,6 +28,7 @@ export default function MedicalRecordsPage() {
   }, [patients, search]);
 
   return (
+    <ViewGuard viewId="medical-records">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -88,5 +90,6 @@ export default function MedicalRecordsPage() {
         </div>
       )}
     </div>
+    </ViewGuard>
   );
 }

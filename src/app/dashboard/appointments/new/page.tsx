@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AvailabilitySearch } from "@/components/availability-search";
 import { AppointmentCalendar } from "@/components/appointment-calendar";
+import { ViewGuard } from "@/components/view-guard";
 import { useClinics } from "@/hooks/use-clinics";
 import { useSpecialties } from "@/hooks/use-specialties";
 import { useDoctors } from "@/hooks/use-doctors";
@@ -213,6 +214,7 @@ export default function NewAppointmentPage() {
   }
 
   return (
+    <ViewGuard viewId="appointments.new">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Nuevo Turno</h1>
@@ -802,5 +804,6 @@ export default function NewAppointmentPage() {
         )}
       </div>
     </div>
+    </ViewGuard>
   );
 }

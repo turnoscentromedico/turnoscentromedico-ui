@@ -15,6 +15,7 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/hooks/use-notifications";
+import { ViewGuard } from "@/components/view-guard";
 import type { InternalNotification } from "@/types";
 
 const TYPE_CONFIG: Record<
@@ -124,6 +125,7 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
+    <ViewGuard viewId="notifications">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -188,5 +190,6 @@ export default function NotificationsPage() {
         </CardContent>
       </Card>
     </div>
+    </ViewGuard>
   );
 }

@@ -39,6 +39,7 @@ import { DataTablePagination } from "@/components/data-table-pagination";
 import { usePageSize } from "@/hooks/use-page-size";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PatientLink } from "@/components/patient-link";
+import { ViewGuard } from "@/components/view-guard";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -172,18 +173,21 @@ export default function DashboardPage() {
 
   if (meLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
+      <ViewGuard viewId="dashboard">
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-48" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-28" />
+            ))}
+          </div>
         </div>
-      </div>
+      </ViewGuard>
     );
   }
 
   return (
+    <ViewGuard viewId="dashboard">
     <div className="space-y-6">
       <SetupBanner />
 
@@ -488,5 +492,6 @@ export default function DashboardPage() {
         onConfirm={executePendingAction}
       />
     </div>
+    </ViewGuard>
   );
 }

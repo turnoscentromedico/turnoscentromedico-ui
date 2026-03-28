@@ -48,6 +48,7 @@ import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Doctor } from "@/types";
+import { ViewGuard } from "@/components/view-guard";
 
 const EMPTY_FORM: DoctorFormData = {
   firstName: "",
@@ -108,6 +109,7 @@ export default function DoctorsPage() {
   }
 
   return (
+    <ViewGuard viewId="doctors">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -419,5 +421,6 @@ export default function DoctorsPage() {
         }}
       />
     </div>
+    </ViewGuard>
   );
 }

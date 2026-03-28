@@ -36,6 +36,7 @@ import { DataTablePagination } from "@/components/data-table-pagination";
 import { usePageSize } from "@/hooks/use-page-size";
 import { SortableHeader, type SortState } from "@/components/sortable-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ViewGuard } from "@/components/view-guard";
 import type { Patient } from "@/types";
 
 export default function PatientsPage() {
@@ -146,6 +147,7 @@ export default function PatientsPage() {
   }
 
   return (
+    <ViewGuard viewId="patients">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -370,5 +372,6 @@ export default function PatientsPage() {
         }}
       />
     </div>
+    </ViewGuard>
   );
 }
