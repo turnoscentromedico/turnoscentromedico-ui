@@ -282,7 +282,7 @@ function UsersPageContent() {
                         })
                         .map((d) => (
                           <SelectItem key={d.id} value={String(d.id)}>
-                            {d.lastName}, {d.firstName} — {d.specialty?.name}
+                            {d.lastName}, {d.firstName} — {d.specialties?.map((s) => s.name).join(", ")}
                           </SelectItem>
                         ))}
                     </SelectContent>

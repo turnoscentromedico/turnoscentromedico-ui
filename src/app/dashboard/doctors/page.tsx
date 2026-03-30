@@ -26,6 +26,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -59,7 +61,7 @@ const EMPTY_FORM: DoctorFormData = {
   phone: "",
   address: "",
   licenseNumber: "",
-  specialtyId: 0,
+  specialtyIds: [],
   clinicId: 0,
 };
 
@@ -219,29 +221,29 @@ export default function DoctorsPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Especialidad *</Label>
-                  <Select
-                    value={form.watch("specialtyId") ? String(form.watch("specialtyId")) : ""}
-                    onValueChange={(val) =>
-                      form.setValue("specialtyId", Number(val ?? 0), { shouldValidate: true })
-                    }
-                  >
-                    <SelectTrigger>
-                      {form.watch("specialtyId")
-                        ? specialties?.find((s) => s.id === form.watch("specialtyId"))?.name ?? "Seleccionar especialidad"
-                        : <SelectValue placeholder="Seleccionar especialidad" />}
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specialties?.map((s) => (
-                        <SelectItem key={s.id} value={String(s.id)}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.specialtyId && (
+                  <Label>Especialidades *</Label>
+                  <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2">
+                    {specialties?.map((s) => {
+                      const selected = form.watch("specialtyIds") ?? [];
+                      return (
+                        <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={selected.includes(s.id)}
+                            onCheckedChange={(checked) => {
+                              const next = checked
+                                ? [...selected, s.id]
+                                : selected.filter((id) => id !== s.id);
+                              form.setValue("specialtyIds", next, { shouldValidate: true });
+                            }}
+                          />
+                          <span className="text-sm">{s.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {form.formState.errors.specialtyIds && (
                     <p className="text-sm text-destructive">
-                      {form.formState.errors.specialtyId.message}
+                      {form.formState.errors.specialtyIds.message}
                     </p>
                   )}
                 </div>
@@ -363,7 +365,17 @@ export default function DoctorsPage() {
                     </TableCell>
                     <TableCell>{d.dni}</TableCell>
                     <TableCell>{d.licenseNumber}</TableCell>
-                    <TableCell>{d.specialty?.name ?? "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {d.specialties?.length
+                          ? d.specialties.map((s) => (
+                              <Badge key={s.id} variant="secondary" className="text-xs">
+                                {s.name}
+                              </Badge>
+                            ))
+                          : "—"}
+                      </div>
+                    </TableCell>
                     <TableCell>{d.clinic?.name ?? "—"}</TableCell>
                     <TableCell>{d.phone ?? "—"}</TableCell>
                     <TableCell className="text-right">

@@ -540,6 +540,7 @@ export function AppointmentCalendar({
                 {selectedSlot.startTime} — {selectedSlot.endTime}
                 {" · Dr. "}
                 {selectedSlot.doctorName}
+                {selectedSlot.specialtyName ? ` · ${selectedSlot.specialtyName}` : ""}
               </p>
             </div>
             <Badge variant="default" className="bg-violet-600 hover:bg-violet-700">
