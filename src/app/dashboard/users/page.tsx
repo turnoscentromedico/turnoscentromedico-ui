@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Plus,
   Pencil,
   Trash2,
   Users,
@@ -20,7 +19,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +43,6 @@ import { DataTablePagination } from "@/components/data-table-pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   useUsers,
-  useCreateUser,
   useUpdateUser,
   useDeleteUser,
 } from "@/hooks/use-users";
@@ -100,7 +97,6 @@ function UsersPageContent() {
   const clinics = clinicsData?.data ?? [];
   const { data: doctorsData } = useDoctors({ pageSize: 100 });
   const doctors = doctorsData?.data ?? [];
-  const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
 
@@ -117,19 +113,6 @@ function UsersPageContent() {
     },
   });
 
-  function openCreate() {
-    setEditing(null);
-    form.reset({
-      clerkUserId: "",
-      name: "",
-      email: "",
-      role: "OPERATOR",
-      clinicIds: [],
-    });
-    setSelectedDoctorId(null);
-    setOpen(true);
-  }
-
   function openEdit(u: SystemUser) {
     setEditing(u);
     form.reset({
@@ -144,21 +127,18 @@ function UsersPageContent() {
   }
 
   async function onSubmit(data: UserFormData) {
+    if (!editing) return;
     const doctorId = data.role === "DOCTOR" ? selectedDoctorId : null;
-    if (editing) {
-      await updateUser.mutateAsync({
-        id: editing.id,
-        data: {
-          name: data.name,
-          email: data.email,
-          role: data.role,
-          clinicIds: data.clinicIds ?? [],
-          doctorId,
-        },
-      });
-    } else {
-      await createUser.mutateAsync({ ...data, doctorId });
-    }
+    await updateUser.mutateAsync({
+      id: editing.id,
+      data: {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        clinicIds: data.clinicIds ?? [],
+        doctorId,
+      },
+    });
     setOpen(false);
     form.reset();
     setSelectedDoctorId(null);
@@ -180,176 +160,156 @@ function UsersPageContent() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
           <p className="text-muted-foreground">
-            Gestión de operadores y administradores del sistema
+            Gestión de roles y permisos del sistema. Los usuarios se registran a través del signup.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button onClick={openCreate} />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Usuario
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editing ? "Editar Usuario" : "Nuevo Usuario"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {!editing && (
-                <div className="space-y-2">
-                  <Label htmlFor="clerkUserId">Clerk User ID *</Label>
-                  <Input
-                    id="clerkUserId"
-                    placeholder="user_2x..."
-                    {...form.register("clerkUserId")}
-                  />
-                  {form.formState.errors.clerkUserId && (
-                    <p className="text-sm text-destructive">
-                      {form.formState.errors.clerkUserId.message}
-                    </p>
-                  )}
-                </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuario</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre *</Label>
+              <Input id="name" {...form.register("name")} />
+              {form.formState.errors.name && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
               )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input id="email" type="email" {...form.register("email")} />
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Rol *</Label>
+              <Select
+                value={form.watch("role")}
+                onValueChange={(val) => {
+                  form.setValue(
+                    "role",
+                    (val ?? "OPERATOR") as "ADMIN" | "OPERATOR" | "DOCTOR" | "STANDARD",
+                  );
+                  if (val !== "DOCTOR") setSelectedDoctorId(null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="OPERATOR">Operador</SelectItem>
+                  <SelectItem value="DOCTOR">Médico</SelectItem>
+                  <SelectItem value="STANDARD">Sin permisos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {form.watch("role") === "DOCTOR" && (
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre *</Label>
-                <Input id="name" {...form.register("name")} />
-                {form.formState.errors.name && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" {...form.register("email")} />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Rol *</Label>
+                <Label className="flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4" />
+                  Doctor vinculado *
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Seleccioná el doctor que corresponde a este usuario
+                </p>
                 <Select
-                  value={form.watch("role")}
-                  onValueChange={(val) => {
-                    form.setValue(
-                      "role",
-                      (val ?? "OPERATOR") as "ADMIN" | "OPERATOR" | "DOCTOR" | "STANDARD",
-                    );
-                    if (val !== "DOCTOR") setSelectedDoctorId(null);
-                  }}
+                  value={selectedDoctorId ? String(selectedDoctorId) : ""}
+                  onValueChange={(val) => setSelectedDoctorId(val ? Number(val) : null)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    {selectedDoctorId
+                      ? (() => {
+                          const d = doctors.find((doc) => doc.id === selectedDoctorId);
+                          return d ? `${d.lastName}, ${d.firstName}` : "Seleccionar doctor";
+                        })()
+                      : <SelectValue placeholder="Seleccionar doctor" />}
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="OPERATOR">Operador</SelectItem>
-                    <SelectItem value="DOCTOR">Médico</SelectItem>
-                    <SelectItem value="STANDARD">Sin permisos</SelectItem>
+                    {doctors
+                      .filter((d) => {
+                        const linkedUsers = users.filter(
+                          (u) => u.doctorId === d.id && u.id !== editing?.id,
+                        );
+                        return linkedUsers.length === 0;
+                      })
+                      .map((d) => (
+                        <SelectItem key={d.id} value={String(d.id)}>
+                          {d.lastName}, {d.firstName} — {d.specialties?.map((s) => s.name).join(", ")}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
-              {form.watch("role") === "DOCTOR" && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Stethoscope className="h-4 w-4" />
-                    Doctor vinculado *
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Seleccioná el doctor que corresponde a este usuario
-                  </p>
-                  <Select
-                    value={selectedDoctorId ? String(selectedDoctorId) : ""}
-                    onValueChange={(val) => setSelectedDoctorId(val ? Number(val) : null)}
-                  >
-                    <SelectTrigger>
-                      {selectedDoctorId
-                        ? (() => {
-                            const d = doctors.find((doc) => doc.id === selectedDoctorId);
-                            return d ? `${d.lastName}, ${d.firstName}` : "Seleccionar doctor";
-                          })()
-                        : <SelectValue placeholder="Seleccionar doctor" />}
-                    </SelectTrigger>
-                    <SelectContent>
-                      {doctors
-                        .filter((d) => {
-                          const linkedUsers = users.filter(
-                            (u) => u.doctorId === d.id && u.id !== editing?.id,
-                          );
-                          return linkedUsers.length === 0;
-                        })
-                        .map((d) => (
-                          <SelectItem key={d.id} value={String(d.id)}>
-                            {d.lastName}, {d.firstName} — {d.specialties?.map((s) => s.name).join(", ")}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Clínicas asignadas
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Seleccioná las clínicas a las que el usuario tendrá acceso
-                </p>
-                <div className="rounded-md border p-3 space-y-2 max-h-48 overflow-y-auto">
-                  {clinics?.length ? (
-                    clinics.map((c) => (
-                      <label
-                        key={c.id}
-                        className="flex items-center gap-3 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={watchedClinicIds.includes(c.id)}
-                          onCheckedChange={() => toggleClinic(c.id)}
-                        />
-                        <span className="text-sm">{c.name}</span>
-                        {c.address && (
-                          <span className="text-xs text-muted-foreground ml-auto truncate max-w-[180px]">
-                            {c.address}
-                          </span>
-                        )}
-                      </label>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-2">
-                      No hay clínicas disponibles
-                    </p>
-                  )}
-                </div>
-                {watchedClinicIds.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {watchedClinicIds.length}{" "}
-                    {watchedClinicIds.length === 1
-                      ? "clínica seleccionada"
-                      : "clínicas seleccionadas"}
+            )}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Clínicas asignadas
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Seleccioná las clínicas a las que el usuario tendrá acceso
+              </p>
+              <div className="rounded-md border p-3 space-y-2 max-h-48 overflow-y-auto">
+                {clinics?.length ? (
+                  clinics.map((c) => (
+                    <label
+                      key={c.id}
+                      className="flex items-center gap-3 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={watchedClinicIds.includes(c.id)}
+                        onCheckedChange={() => toggleClinic(c.id)}
+                      />
+                      <span className="text-sm">{c.name}</span>
+                      {c.address && (
+                        <span className="text-xs text-muted-foreground ml-auto truncate max-w-[180px]">
+                          {c.address}
+                        </span>
+                      )}
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    No hay clínicas disponibles
                   </p>
                 )}
               </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createUser.isPending || updateUser.isPending}
-                >
-                  {editing ? "Guardar" : "Crear"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+              {watchedClinicIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {watchedClinicIds.length}{" "}
+                  {watchedClinicIds.length === 1
+                    ? "clínica seleccionada"
+                    : "clínicas seleccionadas"}
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateUser.isPending}
+              >
+                Guardar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
@@ -446,6 +406,7 @@ function UsersPageContent() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
+                            className="cursor-pointer"
                             onClick={() => openEdit(u)}
                           >
                             <Pencil className="h-4 w-4" />
@@ -453,6 +414,7 @@ function UsersPageContent() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
+                            className="cursor-pointer"
                             onClick={() => deleteUser.mutate(u.id)}
                             disabled={deleteUser.isPending || !u.active}
                           >
