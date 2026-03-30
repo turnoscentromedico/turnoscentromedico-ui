@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -9,8 +10,43 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { useMe } from "@/hooks/use-role";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeSync } from "@/components/theme-sync";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ShieldAlert } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import type { ReactNode } from "react";
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function DashboardHeader() {
+  const { user } = useUser();
+  const greeting = useMemo(() => getGreeting(), []);
+  const today = useMemo(
+    () => format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es }),
+    [],
+  );
+  const firstName = user?.firstName ?? "";
+
+  return (
+    <div className="flex items-center gap-3 border-b bg-card/50 backdrop-blur-sm px-6 py-3">
+      <SidebarTrigger />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">
+          {greeting}
+          {firstName ? `, ${firstName}` : ""}
+        </p>
+        <p className="text-xs text-muted-foreground capitalize">{today}</p>
+      </div>
+      <ThemeToggle />
+      <UserButton appearance={{ elements: { avatarBox: "h-8 w-8" } }} />
+    </div>
+  );
+}
 
 function DashboardContent({ children }: { children: ReactNode }) {
   const { data: me, isLoading: meLoading } = useMe();
@@ -61,9 +97,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="flex min-h-screen w-full">
               <AppSidebar />
               <main className="flex-1 overflow-auto">
-                <div className="flex items-center gap-2 border-b px-6 py-3">
-                  <SidebarTrigger />
-                </div>
+                <DashboardHeader />
                 <div className="p-6">
                   {isLoaded ? (
                     <DashboardContent>{children}</DashboardContent>

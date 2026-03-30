@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Turnos Clínica",
-  description: "Sistema de gestión de turnos para clínicas",
+  title: "AdminDoctor",
+  description: "Sistema de administración de clínicas y centros médicos",
 };
 
 export default function RootLayout({

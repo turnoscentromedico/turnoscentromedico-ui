@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 import {
+  Activity,
   Bell,
   Building2,
   CalendarCheck,
@@ -31,7 +31,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useUnreadNotificationCount } from "@/hooks/use-notifications";
 import { useViewPermissions, type ViewId } from "@/hooks/use-view-permissions";
 
@@ -93,12 +92,19 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <CalendarCheck className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold tracking-tight">
-            Turnos Clínica
-          </span>
+      <SidebarHeader className="border-b px-6 py-5">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Activity className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-base font-bold tracking-tight leading-none">
+              Admin<span className="text-primary">Doctor</span>
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              Gestión Médica
+            </span>
+          </div>
         </Link>
       </SidebarHeader>
 
@@ -147,29 +153,27 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4">
-        <div className="flex items-center gap-3">
-          <UserButton appearance={{ elements: { avatarBox: "h-8 w-8" } }} />
-          <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
-            {role && (
-              <Badge
-                variant={
-                  role === "ADMIN"
-                    ? "default"
-                    : role === "OPERATOR"
+      <SidebarFooter className="border-t px-4 py-3">
+        {role && (
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <Badge
+              variant={
+                role === "ADMIN"
+                  ? "default"
+                  : role === "OPERATOR"
+                    ? "secondary"
+                    : role === "DOCTOR"
                       ? "secondary"
-                      : role === "DOCTOR"
-                        ? "secondary"
-                        : "outline"
-                }
-                className="w-fit text-[10px]"
-              >
-                {roleLabel}
-              </Badge>
-            )}
+                      : "outline"
+              }
+              className="text-[10px]"
+            >
+              {roleLabel}
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">Conectado</span>
           </div>
-          <ThemeToggle />
-        </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

@@ -1,15 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
+  ArrowRight,
   Building2,
   CalendarCheck,
+  CalendarPlus,
   CheckCircle2,
+  Clock,
   Eye,
   Loader2,
   MailCheck,
+  Search,
   Stethoscope,
   Tag,
+  TrendingUp,
   Users,
   UsersRound,
   XCircle,
@@ -34,6 +40,7 @@ import {
 } from "@/hooks/use-appointments";
 import { useClinics } from "@/hooks/use-clinics";
 import { useMe } from "@/hooks/use-role";
+import { useViewPermissions } from "@/hooks/use-view-permissions";
 import { SetupBanner } from "@/components/setup-banner";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { usePageSize } from "@/hooks/use-page-size";
@@ -43,35 +50,47 @@ import { ViewGuard } from "@/components/view-guard";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  loading,
-}: {
+interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ElementType;
   loading?: boolean;
-}) {
+  color: string;
+  bg: string;
+}
+
+function StatCard({ title, value, icon: Icon, loading, color, bg }: StatCardProps) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-8 w-16" />
-        ) : (
-          <p className="text-2xl font-bold">{value}</p>
-        )}
+    <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+      <CardContent className="pt-5 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {title}
+            </p>
+            {loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-2xl font-bold">{value}</p>
+            )}
+          </div>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg}`}>
+            <Icon className={`h-5 w-5 ${color}`} />
+          </div>
+        </div>
       </CardContent>
+      <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${bg.replace("/10", "/40")}`} />
     </Card>
   );
 }
+
+const statConfigs = [
+  { key: "clinics" as const, title: "Clínicas", icon: Building2, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  { key: "doctors" as const, title: "Doctores", icon: Stethoscope, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-500/10" },
+  { key: "patients" as const, title: "Pacientes", icon: UsersRound, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10" },
+  { key: "specialties" as const, title: "Especialidades", icon: Tag, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+  { key: "users" as const, title: "Usuarios", icon: Users, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-500/10" },
+];
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendiente",
@@ -82,16 +101,53 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  CONFIRMED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  PENDING: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  CONFIRMED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   COMPLETED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   NO_SHOW: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
 };
 
+const statusIcons: Record<string, React.ElementType> = {
+  PENDING: Clock,
+  CONFIRMED: CheckCircle2,
+  CANCELLED: XCircle,
+  COMPLETED: CalendarCheck,
+  NO_SHOW: XCircle,
+};
+
+interface QuickActionProps {
+  title: string;
+  description: string;
+  href: string;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+}
+
+function QuickAction({ title, description, href, icon: Icon, color, bg }: QuickActionProps) {
+  return (
+    <Link href={href} className="group">
+      <Card className="h-full transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer border-border/60">
+        <CardContent className="pt-5 pb-4 flex items-center gap-4">
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${bg}`}>
+            <Icon className={`h-5 w-5 ${color}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold truncate">{title}</p>
+            <p className="text-xs text-muted-foreground truncate">{description}</p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
 export default function DashboardPage() {
   const { data: me, isLoading: meLoading } = useMe();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { canAccess } = useViewPermissions();
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const [todayPage, setTodayPage] = useState(1);
@@ -191,20 +247,22 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <SetupBanner />
 
+      {/* Greeting */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          {isAdmin
-            ? "Resumen general del sistema de turnos"
-            : "Panel de operaciones"}
+        <h1 className="text-2xl font-bold tracking-tight">
+          {isAdmin ? "Panel de administración" : "Panel de operaciones"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Resumen general de la actividad del sistema
         </p>
       </div>
 
+      {/* Assigned clinics for non-admin */}
       {!isAdmin && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+              <Building2 className="h-4 w-4 text-primary" />
               Clínicas asignadas
             </CardTitle>
           </CardHeader>
@@ -218,9 +276,9 @@ export default function DashboardPage() {
                 {assignedClinics.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center gap-2 rounded-lg border bg-background px-4 py-2.5"
+                    className="flex items-center gap-2 rounded-xl border bg-card px-4 py-2.5 shadow-sm"
                   >
-                    <Building2 className="h-4 w-4 text-primary" />
+                    <Building2 className="h-4 w-4 text-blue-500" />
                     <div>
                       <p className="text-sm font-semibold">{c.name}</p>
                       {c.address && (
@@ -235,88 +293,185 @@ export default function DashboardPage() {
         </Card>
       )}
 
+      {/* KPI Stats */}
       {isAdmin && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <StatCard title="Clínicas" value={stats?.clinics ?? 0} icon={Building2} loading={statsLoading} />
-            <StatCard title="Doctores" value={stats?.doctors ?? 0} icon={Stethoscope} loading={statsLoading} />
-            <StatCard title="Pacientes" value={stats?.patients ?? 0} icon={UsersRound} loading={statsLoading} />
-            <StatCard title="Especialidades" value={stats?.specialties ?? 0} icon={Tag} loading={statsLoading} />
-            <StatCard title="Usuarios" value={stats?.users ?? 0} icon={Users} loading={statsLoading} />
-            <StatCard title="Total Turnos" value={stats?.appointments.total ?? 0} icon={CalendarCheck} loading={statsLoading} />
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {statConfigs.map((cfg) => (
+            <StatCard
+              key={cfg.key}
+              title={cfg.title}
+              value={stats?.[cfg.key] ?? 0}
+              icon={cfg.icon}
+              loading={statsLoading}
+              color={cfg.color}
+              bg={cfg.bg}
+            />
+          ))}
+        </div>
+      )}
 
-          {stats?.appointments.byStatus &&
+      {/* Appointments by status + Total */}
+      {isAdmin && stats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+          {/* Total turnos card */}
+          <Card className="lg:col-span-2 relative overflow-hidden">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
+                  <TrendingUp className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Total turnos
+                  </p>
+                  {statsLoading ? (
+                    <Skeleton className="h-9 w-20 mt-1" />
+                  ) : (
+                    <p className="text-3xl font-bold">{stats.appointments.total}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500/40" />
+          </Card>
+
+          {/* Status breakdown */}
+          {stats.appointments.byStatus &&
             Object.keys(stats.appointments.byStatus).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Turnos por estado</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <Card className="lg:col-span-4">
+                <CardContent className="pt-5 pb-4">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    Turnos por estado
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     {Object.entries(stats.appointments.byStatus).map(
-                      ([status, count]) => (
-                        <div
-                          key={status}
-                          className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${statusColors[status] ?? "bg-muted"}`}
-                        >
-                          <span>{statusLabels[status] ?? status}</span>
-                          <span className="font-bold">{count}</span>
-                        </div>
-                      ),
+                      ([status, count]) => {
+                        const StatusIcon = statusIcons[status] ?? CalendarCheck;
+                        return (
+                          <div
+                            key={status}
+                            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium ${statusColors[status] ?? "bg-muted"}`}
+                          >
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            <span>{statusLabels[status] ?? status}</span>
+                            <span className="font-bold ml-1">{count}</span>
+                          </div>
+                        );
+                      },
                     )}
                   </div>
                 </CardContent>
               </Card>
             )}
-        </>
+        </div>
       )}
 
-      {/* ── Today's appointments ── */}
+      {/* Quick actions */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {canAccess("appointments.new") && (
+          <QuickAction
+            title="Nuevo turno"
+            description="Agendar un turno para un paciente"
+            href="/dashboard/appointments/new"
+            icon={CalendarPlus}
+            color="text-emerald-600 dark:text-emerald-400"
+            bg="bg-emerald-500/10"
+          />
+        )}
+        {canAccess("appointments") && (
+          <QuickAction
+            title="Ver turnos"
+            description="Listado completo de turnos del sistema"
+            href="/dashboard/appointments"
+            icon={CalendarCheck}
+            color="text-blue-600 dark:text-blue-400"
+            bg="bg-blue-500/10"
+          />
+        )}
+        {canAccess("patients") && (
+          <QuickAction
+            title="Buscar paciente"
+            description="Buscar y acceder al perfil de un paciente"
+            href="/dashboard/patients"
+            icon={Search}
+            color="text-indigo-600 dark:text-indigo-400"
+            bg="bg-indigo-500/10"
+          />
+        )}
+      </div>
+
+      {/* Today's appointments */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CalendarCheck className="h-4 w-4" />
-            Turnos de hoy
-            {todayTotal > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {todayTotal}
-              </Badge>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <CalendarCheck className="h-4 w-4 text-primary" />
+              </div>
+              Turnos de hoy
+              {todayTotal > 0 && (
+                <Badge variant="secondary" className="ml-1 font-bold">
+                  {todayTotal}
+                </Badge>
+              )}
+            </CardTitle>
+            {canAccess("appointments") && (
+              <Link href="/dashboard/appointments">
+                <Button variant="ghost" size="sm" className="gap-1 text-xs cursor-pointer">
+                  Ver todos <ArrowRight className="h-3 w-3" />
+                </Button>
+              </Link>
             )}
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           {todayLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
               ))}
             </div>
           ) : todayAppointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No hay turnos programados para hoy
-              {!isAdmin && assignedClinics.length > 0
-                ? ` en ${assignedClinics.length === 1 ? "tu clínica" : "tus clínicas"}`
-                : ""}
-            </p>
+            <div className="flex flex-col items-center py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted mb-3">
+                <CalendarCheck className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                No hay turnos programados para hoy
+              </p>
+              {!isAdmin && assignedClinics.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  en {assignedClinics.length === 1 ? "tu clínica" : "tus clínicas"}
+                </p>
+              )}
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {todayAppointments.map((apt) => (
                 <div
                   key={apt.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between rounded-xl border border-border/60 p-3 hover:bg-muted/50 transition-colors"
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      <PatientLink patientId={apt.patient.id} firstName={apt.patient.firstName} lastName={apt.patient.lastName} />
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Dr. {apt.doctor.lastName}, {apt.doctor.firstName} —{" "}
-                      {apt.clinic.name}
-                    </p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
+                      {apt.patient.firstName[0]}
+                      {apt.patient.lastName[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        <PatientLink
+                          patientId={apt.patient.id}
+                          firstName={apt.patient.firstName}
+                          lastName={apt.patient.lastName}
+                        />
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        Dr. {apt.doctor.lastName}, {apt.doctor.firstName} — {apt.clinic.name}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
                       {apt.startTime
                         ? apt.endTime
                           ? `${apt.startTime} — ${apt.endTime}`
@@ -325,14 +480,14 @@ export default function DashboardPage() {
                     </span>
                     <Badge
                       variant="outline"
-                      className={statusColors[apt.status]}
+                      className={`text-[10px] ${statusColors[apt.status]}`}
                     >
                       {statusLabels[apt.status] ?? apt.status}
                     </Badge>
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="cursor-pointer"
+                      className="cursor-pointer h-8 w-8 rounded-lg"
                       onClick={() => setDetailId(apt.id)}
                       title="Ver detalle"
                     >
@@ -359,7 +514,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* ── Detail dialog ── */}
+      {/* Detail dialog */}
       <Dialog open={detailId !== null} onOpenChange={(o) => !o && setDetailId(null)}>
         <DialogContent>
           <DialogHeader>
@@ -367,33 +522,33 @@ export default function DashboardPage() {
           </DialogHeader>
           {detail ? (
             <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-muted-foreground">Paciente</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Paciente</p>
                   <p className="font-medium">
                     <PatientLink patientId={detail.patient.id} firstName={detail.patient.firstName} lastName={detail.patient.lastName} />
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Doctor</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Doctor</p>
                   <p className="font-medium">{detail.doctor.firstName} {detail.doctor.lastName}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Clínica</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Clínica</p>
                   <p className="font-medium">{detail.clinic.name}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Especialidad</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Especialidad</p>
                   <p className="font-medium">{detail.specialty?.name ?? "—"}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Fecha</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Fecha</p>
                   <p className="font-medium">
                     {format(new Date(detail.date), "dd/MM/yyyy", { locale: es })}
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Hora</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Hora</p>
                   <p className="font-medium">
                     {detail.startTime
                       ? detail.endTime
@@ -402,32 +557,32 @@ export default function DashboardPage() {
                       : "—"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Estado</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground">Estado</p>
                   <Badge variant="outline" className={statusColors[detail.status]}>
                     {statusLabels[detail.status] ?? detail.status}
                   </Badge>
                 </div>
                 {detail.patient.email && (
-                  <div>
-                    <p className="text-muted-foreground">Email paciente</p>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Email paciente</p>
                     <p className="font-medium">{detail.patient.email}</p>
                   </div>
                 )}
               </div>
               {detail.notes && (
                 <div>
-                  <p className="text-muted-foreground">Notas</p>
+                  <p className="text-xs text-muted-foreground">Notas</p>
                   <p>{detail.notes}</p>
                 </div>
               )}
 
               {detail.status !== "CANCELLED" && detail.status !== "COMPLETED" && (
-                <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <div className="flex flex-wrap gap-2 pt-3 border-t">
                   {detail.status === "PENDING" && (
                     <Button
                       size="sm"
-                      className="gap-1.5 bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
                       onClick={() => { setDetailId(null); requestConfirm(detail.id); }}
                       disabled={actionLoading === `confirm-${detail.id}`}
                     >
