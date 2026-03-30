@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ViewGuard } from "@/components/view-guard";
+import { useViewPermissions } from "@/hooks/use-view-permissions";
 import { format, parseISO, differenceInYears } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -87,9 +88,12 @@ export default function PatientProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = Number(params.id);
-  const defaultTab = searchParams.get("tab") === "history" ? "history" : "info";
+  const requestedTab = searchParams.get("tab");
 
   const { data: patient, isLoading } = usePatient(patientId);
+  const { canAccess } = useViewPermissions();
+  const canAccessHC = canAccess("medical-records");
+  const defaultTab = requestedTab === "history" && canAccessHC ? "history" : "info";
 
   const [hrPage, setHrPage] = useState(1);
   const [hrPageSize, setHrPageSize] = usePageSize("medical-records");
@@ -183,14 +187,16 @@ export default function PatientProfilePage() {
           <TabsTrigger value="info" className="gap-1.5 cursor-pointer">
             <User className="h-4 w-4" /> Datos personales
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-1.5 cursor-pointer">
-            <ClipboardList className="h-4 w-4" /> Historia clínica
-            {patient._count?.medicalRecords ? (
-              <Badge variant="secondary" className="ml-1 text-xs">
-                {patient._count.medicalRecords}
-              </Badge>
-            ) : null}
-          </TabsTrigger>
+          {canAccessHC && (
+            <TabsTrigger value="history" className="gap-1.5 cursor-pointer">
+              <ClipboardList className="h-4 w-4" /> Historia clínica
+              {patient._count?.medicalRecords ? (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {patient._count.medicalRecords}
+                </Badge>
+              ) : null}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appointments" className="gap-1.5 cursor-pointer">
             <Calendar className="h-4 w-4" /> Turnos
             {patient._count?.appointments ? (
@@ -223,6 +229,7 @@ export default function PatientProfilePage() {
         </TabsContent>
 
         {/* ── Historia clínica ── */}
+        {canAccessHC && (
         <TabsContent value="history">
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -371,6 +378,7 @@ export default function PatientProfilePage() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
         {/* ── Turnos ── */}
         <TabsContent value="appointments">
@@ -412,6 +420,7 @@ export default function PatientProfilePage() {
       </Tabs>
 
       {/* ── Modal nueva entrada HC ── */}
+      {canAccessHC && (
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -561,7 +570,9 @@ export default function PatientProfilePage() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
+      {canAccessHC && (
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
@@ -571,6 +582,7 @@ export default function PatientProfilePage() {
         variant="destructive"
         onConfirm={handleDeleteConfirm}
       />
+      )}
     </div>
     </ViewGuard>
   );
