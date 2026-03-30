@@ -15,7 +15,8 @@ export type ViewId =
   | "doctors"
   | "patients"
   | "users"
-  | "settings";
+  | "settings"
+  | "documentation";
 
 const ALL_VIEWS: ViewId[] = [
   "dashboard",
@@ -43,6 +44,7 @@ const VIEW_LABELS: Record<ViewId, string> = {
   patients: "Pacientes",
   users: "Usuarios",
   settings: "Configuración",
+  documentation: "Documentación",
 };
 
 export { ALL_VIEWS, VIEW_LABELS };

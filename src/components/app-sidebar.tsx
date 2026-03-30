@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   CalendarPlus,
   ClipboardList,
+  FileText,
   LayoutDashboard,
   Stethoscope,
   Tag,
@@ -66,6 +67,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { title: "Pacientes", href: "/dashboard/patients", icon: UsersRound, viewId: "patients" },
       { title: "Usuarios", href: "/dashboard/users", icon: Users, viewId: "users" },
       { title: "Configuración", href: "/dashboard/settings", icon: Settings, viewId: "settings" },
+      { title: "Documentación", href: "/dashboard/documentation", icon: FileText, viewId: "documentation" },
     ],
   },
 ];
