@@ -20,7 +20,7 @@ export const doctorSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   licenseNumber: z.string().min(1, "El número de matrícula es requerido"),
-  specialtyId: z.number().min(1, "Seleccioná una especialidad"),
+  specialtyIds: z.array(z.number()).min(1, "Seleccioná al menos una especialidad"),
   clinicId: z.number().min(1, "Seleccioná una clínica"),
 });
 
@@ -48,6 +48,7 @@ export const patientSchema = z.object({
 export const appointmentSchema = z.object({
   clinicId: z.number().min(1, "Seleccioná una clínica"),
   doctorId: z.number().min(1, "Seleccioná un doctor"),
+  specialtyId: z.number().min(1, "Seleccioná una especialidad"),
   patientId: z.number().min(1, "Seleccioná un paciente"),
   date: z.string().min(1, "Seleccioná una fecha"),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, "Seleccioná un horario"),

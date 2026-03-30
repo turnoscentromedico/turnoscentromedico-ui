@@ -43,6 +43,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useDoctor, useUpdateDoctor } from "@/hooks/use-doctors";
 import { useClinics } from "@/hooks/use-clinics";
 import { useSpecialties } from "@/hooks/use-specialties";
@@ -155,7 +156,7 @@ export default function DoctorDetailPage({
         phone: doctor.phone ?? "",
         address: doctor.address ?? "",
         licenseNumber: doctor.licenseNumber,
-        specialtyId: doctor.specialtyId,
+        specialtyIds: doctor.specialties?.map((s) => s.id) ?? [],
         clinicId: doctor.clinicId,
       });
     }
@@ -296,7 +297,7 @@ export default function DoctorDetailPage({
             {doctor.firstName} {doctor.lastName}
           </h1>
           <p className="text-muted-foreground">
-            {doctor.specialty?.name} — {doctor.clinic?.name}
+            {doctor.specialties?.map((s) => s.name).join(", ") || "Sin especialidad"} — {doctor.clinic?.name}
           </p>
         </div>
       </div>
@@ -381,24 +382,31 @@ export default function DoctorDetailPage({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Especialidad</Label>
-                <Select
-                  value={form.watch("specialtyId") ? String(form.watch("specialtyId")) : ""}
-                  onValueChange={(val) => form.setValue("specialtyId", Number(val), { shouldValidate: true })}
-                >
-                  <SelectTrigger>
-                    {form.watch("specialtyId")
-                      ? specialties?.find((s) => s.id === form.watch("specialtyId"))?.name ?? "Seleccionar especialidad"
-                      : <SelectValue placeholder="Seleccionar especialidad" />}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {specialties?.map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Especialidades</Label>
+                <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2">
+                  {specialties?.map((s) => {
+                    const selected = form.watch("specialtyIds") ?? [];
+                    return (
+                      <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={selected.includes(s.id)}
+                          onCheckedChange={(checked) => {
+                            const next = checked
+                              ? [...selected, s.id]
+                              : selected.filter((sid) => sid !== s.id);
+                            form.setValue("specialtyIds", next, { shouldValidate: true });
+                          }}
+                        />
+                        <span className="text-sm">{s.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {form.formState.errors.specialtyIds && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.specialtyIds.message}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex justify-end">

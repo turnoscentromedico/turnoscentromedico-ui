@@ -88,9 +88,8 @@ export interface Doctor {
   phone: string | null;
   address: string | null;
   licenseNumber: string;
-  specialtyId: number;
   clinicId: number;
-  specialty: Specialty;
+  specialties: Specialty[];
   clinic: Clinic;
   createdAt: string;
   updatedAt: string;
@@ -109,7 +108,7 @@ export interface CreateDoctorInput {
   phone?: string;
   address?: string;
   licenseNumber: string;
-  specialtyId: number;
+  specialtyIds: number[];
   clinicId: number;
 }
 
@@ -122,7 +121,7 @@ export interface UpdateDoctorInput {
   phone?: string;
   address?: string;
   licenseNumber?: string;
-  specialtyId?: number;
+  specialtyIds?: number[];
   clinicId?: number;
 }
 
@@ -281,6 +280,7 @@ export interface AvailableSlot {
 export interface CreateAppointmentInput {
   clinicId: number;
   doctorId: number;
+  specialtyId: number;
   patientId: number;
   date: string;      // "YYYY-MM-DD"
   startTime: string;  // "HH:mm"

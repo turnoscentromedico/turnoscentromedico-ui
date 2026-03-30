@@ -52,6 +52,7 @@ export default function NewAppointmentPage() {
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [selectedDoctorSpecialty, setSelectedDoctorSpecialty] = useState<Specialty | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [notes, setNotes] = useState("");
@@ -119,6 +120,7 @@ export default function NewAppointmentPage() {
   function resetSelections() {
     setSelectedSpecialty(null);
     setSelectedDoctor(null);
+    setSelectedDoctorSpecialty(null);
     setSelectedSlot(null);
     setSelectedPatient(null);
     setStep(0);
@@ -135,7 +137,9 @@ export default function NewAppointmentPage() {
   function canAdvance(): boolean {
     switch (step) {
       case 0: return selectedClinic !== null;
-      case 1: return mode === "specialty" ? selectedSpecialty !== null : selectedDoctor !== null;
+      case 1:
+        if (mode === "specialty") return selectedSpecialty !== null;
+        return selectedDoctor !== null && selectedDoctorSpecialty !== null;
       case 2: return selectedSlot !== null;
       case 3: return selectedPatient !== null;
       default: return true;
@@ -163,7 +167,7 @@ export default function NewAppointmentPage() {
         d.lastName.toLowerCase().includes(q) ||
         d.dni.includes(q) ||
         d.licenseNumber.toLowerCase().includes(q) ||
-        d.specialty?.name.toLowerCase().includes(q),
+        d.specialties?.some((s) => s.name.toLowerCase().includes(q)),
     );
   }, [doctors, doctorSearch]);
 
@@ -200,10 +204,14 @@ export default function NewAppointmentPage() {
     if (!selectedClinic || !selectedSlot || !selectedPatient) return;
 
     const docId = selectedDoctor?.id ?? selectedSlot.doctorId;
+    const specId = mode === "doctor"
+      ? selectedDoctorSpecialty?.id ?? selectedSlot.specialtyId
+      : selectedSpecialty?.id ?? selectedSlot.specialtyId;
 
     await createAppointment.mutateAsync({
       clinicId: selectedClinic.id,
       doctorId: docId,
+      specialtyId: specId,
       patientId: selectedPatient.id,
       date: selectedSlot.date,
       startTime: selectedSlot.startTime,
@@ -419,6 +427,7 @@ export default function NewAppointmentPage() {
                   : "No hay doctores en esta clínica"}
               </p>
             ) : (
+              <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredDoctors.map((d) => (
                   <button
@@ -426,6 +435,11 @@ export default function NewAppointmentPage() {
                     onClick={() => {
                       setSelectedDoctor(d);
                       setSelectedSlot(null);
+                      if (d.specialties?.length === 1) {
+                        setSelectedDoctorSpecialty(d.specialties[0]);
+                      } else {
+                        setSelectedDoctorSpecialty(null);
+                      }
                     }}
                     className={`group rounded-xl border-2 p-5 text-left transition-all hover:border-primary hover:shadow-sm ${
                       selectedDoctor?.id === d.id
@@ -436,9 +450,13 @@ export default function NewAppointmentPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-semibold">{d.lastName}, {d.firstName}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {d.specialty?.name}
-                        </p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {d.specialties?.map((s) => (
+                            <Badge key={s.id} variant="secondary" className="text-xs">
+                              {s.name}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                       {selectedDoctor?.id === d.id && (
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -449,6 +467,35 @@ export default function NewAppointmentPage() {
                   </button>
                 ))}
               </div>
+
+              {selectedDoctor && (selectedDoctor.specialties?.length ?? 0) > 1 && (
+                <div className="mt-4 space-y-3">
+                  <Label className="text-sm font-semibold">Seleccionar especialidad para este turno</Label>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {selectedDoctor.specialties.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setSelectedDoctorSpecialty(s)}
+                        className={`rounded-xl border-2 p-4 text-left transition-all hover:border-primary hover:shadow-sm ${
+                          selectedDoctorSpecialty?.id === s.id
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-transparent bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-sm">{s.name}</p>
+                          {selectedDoctorSpecialty?.id === s.id && (
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -532,6 +579,7 @@ export default function NewAppointmentPage() {
               <AppointmentCalendar
                 clinicId={selectedClinic.id}
                 doctorId={selectedDoctor.id}
+                specialtyId={selectedDoctorSpecialty?.id}
                 doctorName={`${selectedDoctor.firstName} ${selectedDoctor.lastName}`}
                 clinicName={selectedClinic.name}
                 onSlotSelect={handleSlotSelect}
@@ -544,6 +592,7 @@ export default function NewAppointmentPage() {
               <AvailabilitySearch
                 clinicId={selectedClinic.id}
                 doctorId={selectedDoctor.id}
+                specialtyId={selectedDoctorSpecialty?.id}
                 onSlotSelect={handleSlotSelect}
                 selectedSlot={selectedSlot}
               />
@@ -728,7 +777,9 @@ export default function NewAppointmentPage() {
                   Dr. {selectedDoctor ? `${selectedDoctor.firstName} ${selectedDoctor.lastName}` : selectedSlot?.doctorName}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {selectedDoctor?.specialty?.name ?? selectedSlot?.specialtyName}
+                  {mode === "doctor"
+                    ? selectedDoctorSpecialty?.name ?? selectedSlot?.specialtyName
+                    : selectedSpecialty?.name ?? selectedSlot?.specialtyName}
                 </p>
               </div>
               <div className="rounded-xl border p-4 space-y-1">

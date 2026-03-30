@@ -293,6 +293,7 @@ export default function PatientProfilePage() {
                           </Badge>
                           <span className="text-sm text-muted-foreground">
                             {format(parseISO(entry.date), "d MMM yyyy", { locale: es })}
+                            {entry.appointment?.startTime && ` — ${entry.appointment.startTime} hs`}
                           </span>
                         </div>
                         {entry.entryType === "manual" && (

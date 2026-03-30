@@ -642,6 +642,7 @@ function ListViewCard({
                 <TableHead><SortableHeader label="Hora" field="startTime" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
                 <TableHead><SortableHeader label="Paciente" field="patient.lastName" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
                 <TableHead><SortableHeader label="Doctor" field="doctor.lastName" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
+                <TableHead><SortableHeader label="Especialidad" field="specialty.name" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
                 <TableHead><SortableHeader label="Clínica" field="clinic.name" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
                 <TableHead><SortableHeader label="Estado" field="status" sort={sort} onSort={(s) => { onSort(s); onPageChange(1); }} /></TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -664,6 +665,7 @@ function ListViewCard({
                     <PatientLink patientId={a.patient.id} firstName={a.patient.firstName} lastName={a.patient.lastName} />
                   </TableCell>
                   <TableCell>{a.doctor.lastName}, {a.doctor.firstName}</TableCell>
+                  <TableCell>{a.specialty?.name ?? "—"}</TableCell>
                   <TableCell>{a.clinic.name}</TableCell>
                   <TableCell>
                     <Badge
